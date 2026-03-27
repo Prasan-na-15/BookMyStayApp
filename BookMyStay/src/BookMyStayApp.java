@@ -1,83 +1,109 @@
 import java.util.HashMap;
 import java.util.Map;
 
-public class RoomInventory {
+public class RoomSystem {
 
-    private Map<String, Integer> inventory;
+    // -------------------------------
+    // Room Domain Model
+    // -------------------------------
+    static class Room {
+        String type;
+        double price;
+        String amenities;
 
-    // Constructor: initialize inventory
-    public RoomInventory() {
-        inventory = new HashMap<>();
+        Room(String type, double price, String amenities) {
+            this.type = type;
+            this.price = price;
+            this.amenities = amenities;
+        }
 
-        // Initial room setup
+        void displayDetails() {
+            System.out.println("Type: " + type +
+                    ", Price: $" + price +
+                    ", Amenities: " + amenities);
+        }
+    }
+
+    // -------------------------------
+    // Centralized Inventory (State)
+    // -------------------------------
+    private Map<String, Integer> inventory = new HashMap<>();
+
+    // Room details storage (Domain layer)
+    private Map<String, Room> roomCatalog = new HashMap<>();
+
+    // Constructor: initialize system
+    public RoomSystem() {
+
+        // Inventory setup
         inventory.put("Deluxe", 5);
-        inventory.put("Suite", 3);
+        inventory.put("Suite", 0);       // unavailable
         inventory.put("Standard", 10);
+
+        // Room details setup
+        roomCatalog.put("Deluxe", new Room("Deluxe", 120.0, "WiFi, TV, Mini Bar"));
+        roomCatalog.put("Suite", new Room("Suite", 250.0, "WiFi, TV, Jacuzzi"));
+        roomCatalog.put("Standard", new Room("Standard", 80.0, "WiFi, TV"));
     }
 
-    // Get availability
-    public int getAvailability(String roomType) {
-        return inventory.getOrDefault(roomType, 0);
+    // -------------------------------
+    // Read-Only Search Logic
+    // -------------------------------
+    public void searchAvailableRooms() {
+
+        System.out.println("\nAvailable Rooms:\n");
+
+        for (String roomType : inventory.keySet()) {
+
+            int available = inventory.get(roomType);
+
+            // Validation: skip unavailable rooms
+            if (available <= 0) {
+                continue;
+            }
+
+            // Defensive check
+            Room room = roomCatalog.get(roomType);
+            if (room == null) {
+                continue;
+            }
+
+            // Display room details
+            room.displayDetails();
+            System.out.println("Available Count: " + available);
+            System.out.println("------------------------");
+        }
     }
 
-    // Book room
-    public boolean bookRoom(String roomType) {
-        int available = getAvailability(roomType);
+    // -------------------------------
+    // Booking Logic (Separate Concern)
+    // -------------------------------
+    public void bookRoom(String roomType) {
+        int available = inventory.getOrDefault(roomType, 0);
 
         if (available > 0) {
             inventory.put(roomType, available - 1);
-            return true;
-        }
-        return false;
-    }
-
-    // Release room
-    public void releaseRoom(String roomType) {
-        inventory.put(roomType, getAvailability(roomType) + 1);
-    }
-
-    // Add/update room type
-    public void setAvailability(String roomType, int count) {
-        inventory.put(roomType, count);
-    }
-
-    // Display inventory
-    public void displayInventory() {
-        System.out.println("\nCurrent Inventory:");
-        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
-            System.out.println(entry.getKey() + " : " + entry.getValue());
+            System.out.println("Booked: " + roomType);
+        } else {
+            System.out.println("No availability for: " + roomType);
         }
     }
 
-    // Main method (Flow execution)
+    // -------------------------------
+    // Main Flow (Guest Interaction)
+    // -------------------------------
     public static void main(String[] args) {
 
-        // Step 1: Initialize system
-        RoomInventory system = new RoomInventory();
+        RoomSystem system = new RoomSystem();
 
-        // Step 2: Show initial state
-        system.displayInventory();
+        // Step 1: Guest searches rooms (READ-ONLY)
+        system.searchAvailableRooms();
 
-        // Step 3: Book a room
+        // Step 2: Booking happens separately
         System.out.println("\nBooking Deluxe...");
-        if (system.bookRoom("Deluxe")) {
-            System.out.println("Booking successful!");
-        } else {
-            System.out.println("No rooms available!");
-        }
+        system.bookRoom("Deluxe");
 
-        // Step 4: Check availability
-        System.out.println("Deluxe Available: " + system.getAvailability("Deluxe"));
-
-        // Step 5: Add new room type (scalability)
-        System.out.println("\nAdding Executive rooms...");
-        system.setAvailability("Executive", 4);
-
-        // Step 6: Release a room
-        System.out.println("\nReleasing Deluxe...");
-        system.releaseRoom("Deluxe");
-
-        // Step 7: Final state
-        system.displayInventory();
+        // Step 3: Search again (updated view)
+        system.searchAvailableRooms();
     }
 }

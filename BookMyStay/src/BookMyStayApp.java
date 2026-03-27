@@ -1,115 +1,83 @@
-/**
- * Book My Stay App - Room Initialization Demo (Single Class Version)
- * Demonstrates abstraction, inheritance, polymorphism, and encapsulation
- *
- * @author YourName
- * @version 1.1
- */
-public class BookMyStayApp {
+import java.util.HashMap;
+import java.util.Map;
 
-    // 🔹 Abstract Class
-    static abstract class Room {
+public class RoomInventory {
 
-        private String type;
-        private int beds;
-        private double price;
+    private Map<String, Integer> inventory;
 
-        public Room(String type, int beds, double price) {
-            this.type = type;
-            this.beds = beds;
-            this.price = price;
-        }
+    // Constructor: initialize inventory
+    public RoomInventory() {
+        inventory = new HashMap<>();
 
-        public String getType() {
-            return type;
-        }
-
-        public int getBeds() {
-            return beds;
-        }
-
-        public double getPrice() {
-            return price;
-        }
-
-        // Abstract method
-        public abstract void displayRoomDetails();
+        // Initial room setup
+        inventory.put("Deluxe", 5);
+        inventory.put("Suite", 3);
+        inventory.put("Standard", 10);
     }
 
-    // 🔹 Single Room
-    static class SingleRoom extends Room {
-
-        public SingleRoom() {
-            super("Single Room", 1, 1000);
-        }
-
-        @Override
-        public void displayRoomDetails() {
-            System.out.println("Room Type: " + getType());
-            System.out.println("Beds: " + getBeds());
-            System.out.println("Price: ₹" + getPrice());
-        }
+    // Get availability
+    public int getAvailability(String roomType) {
+        return inventory.getOrDefault(roomType, 0);
     }
 
-    // 🔹 Double Room
-    static class DoubleRoom extends Room {
+    // Book room
+    public boolean bookRoom(String roomType) {
+        int available = getAvailability(roomType);
 
-        public DoubleRoom() {
-            super("Double Room", 2, 1800);
+        if (available > 0) {
+            inventory.put(roomType, available - 1);
+            return true;
         }
+        return false;
+    }
 
-        @Override
-        public void displayRoomDetails() {
-            System.out.println("Room Type: " + getType());
-            System.out.println("Beds: " + getBeds());
-            System.out.println("Price: ₹" + getPrice());
+    // Release room
+    public void releaseRoom(String roomType) {
+        inventory.put(roomType, getAvailability(roomType) + 1);
+    }
+
+    // Add/update room type
+    public void setAvailability(String roomType, int count) {
+        inventory.put(roomType, count);
+    }
+
+    // Display inventory
+    public void displayInventory() {
+        System.out.println("\nCurrent Inventory:");
+        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
+            System.out.println(entry.getKey() + " : " + entry.getValue());
         }
     }
 
-    // 🔹 Suite Room
-    static class SuiteRoom extends Room {
-
-        public SuiteRoom() {
-            super("Suite Room", 3, 3000);
-        }
-
-        @Override
-        public void displayRoomDetails() {
-            System.out.println("Room Type: " + getType());
-            System.out.println("Beds: " + getBeds());
-            System.out.println("Price: ₹" + getPrice());
-        }
-    }
-
-    // 🔹 Main Method (Entry Point)
+    // Main method (Flow execution)
     public static void main(String[] args) {
 
-        System.out.println("=== Book My Stay App ===");
+        // Step 1: Initialize system
+        RoomInventory system = new RoomInventory();
 
-        // Polymorphism: using Room reference
-        Room single = new SingleRoom();
-        Room doubleRoom = new DoubleRoom();
-        Room suite = new SuiteRoom();
+        // Step 2: Show initial state
+        system.displayInventory();
 
-        // Static availability variables
-        int singleAvailability = 5;
-        int doubleAvailability = 3;
-        int suiteAvailability = 2;
+        // Step 3: Book a room
+        System.out.println("\nBooking Deluxe...");
+        if (system.bookRoom("Deluxe")) {
+            System.out.println("Booking successful!");
+        } else {
+            System.out.println("No rooms available!");
+        }
 
-        // Display room details
-        System.out.println("\n--- Room Details ---");
+        // Step 4: Check availability
+        System.out.println("Deluxe Available: " + system.getAvailability("Deluxe"));
 
-        single.displayRoomDetails();
-        System.out.println("Available: " + singleAvailability);
+        // Step 5: Add new room type (scalability)
+        System.out.println("\nAdding Executive rooms...");
+        system.setAvailability("Executive", 4);
 
-        System.out.println();
+        // Step 6: Release a room
+        System.out.println("\nReleasing Deluxe...");
+        system.releaseRoom("Deluxe");
 
-        doubleRoom.displayRoomDetails();
-        System.out.println("Available: " + doubleAvailability);
-
-        System.out.println();
-
-        suite.displayRoomDetails();
-        System.out.println("Available: " + suiteAvailability);
+        // Step 7: Final state
+        system.displayInventory();
     }
 }
